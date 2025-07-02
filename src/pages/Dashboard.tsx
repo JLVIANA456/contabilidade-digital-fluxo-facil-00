@@ -119,14 +119,14 @@ const Dashboard = () => {
         return (
           <div className="grid gap-4">
             {analiseAtual.dados.map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`w-4 h-4 rounded-full ${item.cor}`}></div>
-                  <span className="font-medium text-gray-700">{item.nome}</span>
+                  <span className="font-medium text-muted-foreground">{item.nome}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold text-gray-900">{item.quantidade}</span>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  <span className="text-2xl font-bold text-card-foreground">{item.quantidade}</span>
+                  <Badge variant="secondary" className="bg-primary text-primary-foreground">
                     {item.porcentagem}%
                   </Badge>
                 </div>
@@ -150,13 +150,13 @@ const Dashboard = () => {
                     inactiveZone={0.01}
                     borderWidth={2}
                   />
-                  <Card className="bg-gradient-to-br from-white to-gray-50 border-0 shadow-md hover:shadow-lg transition-all duration-200 relative">
+                  <Card className="bg-card border-0 shadow-md hover:shadow-lg transition-all duration-200 relative">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-gray-600">{item.nome}</p>
-                          <p className="text-3xl font-bold text-gray-900 mt-1">{item.quantidade}</p>
-                          <p className="text-xs text-gray-500 mt-1">{item.descricao}</p>
+                          <p className="text-sm font-medium text-muted-foreground">{item.nome}</p>
+                          <p className="text-3xl font-bold text-card-foreground mt-1">{item.quantidade}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{item.descricao}</p>
                         </div>
                         <div className={`h-12 w-12 ${item.cor} rounded-lg flex items-center justify-center`}>
                           <IconComponent className="h-6 w-6 text-white" />
@@ -172,29 +172,29 @@ const Dashboard = () => {
 
       case 'tabela':
         return (
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <div className="overflow-hidden rounded-lg border border-border">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Categoria
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Valor
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Percentual
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {analiseAtual.dados.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="hover:bg-muted">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`font-medium ${item.cor}`}>{item.categoria}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-lg font-bold text-gray-900">{item.valor}</span>
+                      <span className="text-lg font-bold text-card-foreground">{item.valor}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <Badge variant="outline" className={item.cor.replace('text-', 'border-')}>

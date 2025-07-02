@@ -103,7 +103,7 @@ export function AppSidebar() {
             <img src="/logo.png" alt="JLV Flash Pro Logo" className="w-8 h-8 rounded-lg" />
             {state !== "collapsed" && (
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white font-sans">JLV Flash Pro</h1>
+                <span className="font-bold text-lg tracking-tight">JLV Contábil Pro</span>
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">Gestão Contábil</p>
               </div>
             )}
