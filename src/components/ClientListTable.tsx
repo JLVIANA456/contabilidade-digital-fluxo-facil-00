@@ -1,16 +1,17 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Calendar } from "lucide-react";
+import { Eye, Calendar, Edit, Trash2 } from "lucide-react";
 import { Cliente } from "@/hooks/useClientes";
 
 interface ClientListTableProps {
   clientes: Cliente[];
   onClienteClick: (cliente: Cliente) => void;
+  onEditCliente?: (cliente: Cliente) => void;
+  onDeleteCliente?: (cliente: Cliente) => void;
 }
 
-const ClientListTable = ({ clientes, onClienteClick }: ClientListTableProps) => {
+const ClientListTable = ({ clientes, onClienteClick, onEditCliente, onDeleteCliente }: ClientListTableProps) => {
   const getRegimeColor = (regime: string) => {
     switch (regime) {
       case 'Simples Nacional':
@@ -101,14 +102,38 @@ const ClientListTable = ({ clientes, onClienteClick }: ClientListTableProps) => 
                 </span>
               </TableCell>
               <TableCell className="text-center">
-                <Button 
-                  onClick={() => onClienteClick(cliente)}
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Ver
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    onClick={() => onClienteClick(cliente)}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ver
+                  </Button>
+                  {onEditCliente && (
+                    <Button
+                      onClick={() => onEditCliente(cliente)}
+                      size="sm"
+                      variant="outline"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                  )}
+                  {onDeleteCliente && (
+                    <Button
+                      onClick={() => onDeleteCliente(cliente)}
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

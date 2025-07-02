@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,6 +32,25 @@ const ClientDetails = ({
   
   const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const formasEnvio = ['Gestta', 'Google Drive', 'Omie', 'Consulta eCAC', 'Físico', 'Email'];
+
+  const inputFileRef = useRef<HTMLInputElement>(null);
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (inputFileRef.current) {
+        inputFileRef.current.files = e.dataTransfer.files;
+        // Se já houver um handler de upload, chame aqui
+        // handleFileChange(e)
+      }
+    }
+  };
+
+  const handleClickDropzone = () => {
+    if (inputFileRef.current) {
+      inputFileRef.current.click();
+    }
+  };
 
   const salvarAlteracoes = () => {
     onAtualizar(dadosEdicao);
@@ -395,16 +413,28 @@ const ClientDetails = ({
           {mesArquivosAberto && (
             <div className="space-y-6">
               {/* Área de Upload */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8"
+                onClick={handleClickDropzone}
+                onDrop={handleDrop}
+                onDragOver={e => e.preventDefault()}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="mt-4">
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-gray-900">
-                        Clique para fazer upload ou arraste arquivos aqui
-                      </span>
-                      <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple />
-                    </label>
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Clique para fazer upload ou arraste arquivos aqui
+                    </span>
+                    <input
+                      ref={inputFileRef}
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      className="sr-only"
+                      multiple
+                      // onChange={handleFileChange} // Use seu handler de upload aqui
+                    />
                     <p className="mt-2 text-xs text-gray-500">
                       PNG, JPG, PDF até 10MB cada
                     </p>

@@ -1,17 +1,17 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, User, Building2, Edit, Eye } from "lucide-react";
+import { MapPin, Calendar, User, Building2, Edit, Eye, Trash2 } from "lucide-react";
 import { Cliente } from "@/hooks/useClientes";
 
 interface ClientListProps {
   clientes: Cliente[];
   onClienteClick: (cliente: Cliente) => void;
   onEditCliente?: (cliente: Cliente) => void;
+  onDeleteCliente?: (cliente: Cliente) => void;
 }
 
-const ClientList = ({ clientes, onClienteClick, onEditCliente }: ClientListProps) => {
+const ClientList = ({ clientes, onClienteClick, onEditCliente, onDeleteCliente }: ClientListProps) => {
   if (clientes.length === 0) {
     return (
       <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-black/80 dark:border dark:border-red-900">
@@ -99,7 +99,19 @@ const ClientList = ({ clientes, onClienteClick, onEditCliente }: ClientListProps
                       <Edit className="h-4 w-4" />
                     </Button>
                   )}
-                  
+                  {onDeleteCliente && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCliente(cliente);
+                      }}
+                      className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"

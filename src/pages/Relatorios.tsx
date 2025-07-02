@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +10,9 @@ import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Download, Users } 
 import { useAppStore } from "@/store/useAppStore";
 import { useClientes } from "@/hooks/useClientes";
 import { Button } from "@/components/ui/button";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Relatorios = () => {
   const { clientes } = useClientes();
@@ -112,6 +114,124 @@ const Relatorios = () => {
 
   const relatorioAnual = gerarRelatorioCompleto();
 
+  // Função utilitária para converter array de objetos em CSV
+  function exportToCSV(filename: string, rows: any[], headers: string[]) {
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => headers.map(h => '"' + (row[h] ?? "") + '"').join(","))
+    ].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, filename);
+  }
+
+  // Função para exportar relatório em PDF (visual, com tabelas)
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    if (tipoRelatorio === "resumo") {
+      doc.text("Relatório Resumo Mensal", 14, 15);
+      autoTable(doc, {
+        startY: 25,
+        head: [["Mês", "Completos", "Parciais", "Pendentes", "Total"]],
+        body: [[
+          mesesDoAno.find(m => m.value === mesSelecionado)?.label,
+          estatisticas.completos,
+          estatisticas.parciais,
+          estatisticas.pendentes,
+          estatisticas.total
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [220, 38, 38] },
+        styles: { fontSize: 12 },
+      });
+    } else if (tipoRelatorio === "detalhado") {
+      doc.text(`Relatório Detalhado - ${mesesDoAno.find(m => m.value === mesSelecionado)?.label} ${anoSelecionado}`, 14, 15);
+      const body = clientes.filter(c => c.ativo !== false).map(cliente => {
+        const { status, progresso, detalhes } = obterStatusCliente(cliente, mesSelecionado);
+        return [
+          cliente.nome,
+          cliente.colaborador_responsavel,
+          status,
+          detalhes.dataFechamento ? "Sim" : "Não",
+          detalhes.integracaoFiscal ? "Sim" : "Não",
+          detalhes.integracaoFopag ? "Sim" : "Não",
+          detalhes.semMovimentoFopag ? "Sim" : "Não",
+          Math.round(progresso) + "%"
+        ];
+      });
+      autoTable(doc, {
+        startY: 25,
+        head: [["Cliente", "Colaborador", "Status", "Data Fechamento", "Int. Fiscal", "Int. FOPAG", "Sem Mov. FOPAG", "Progresso"]],
+        body,
+        theme: 'grid',
+        headStyles: { fillColor: [220, 38, 38] },
+        styles: { fontSize: 10 },
+      });
+    } else if (tipoRelatorio === "anual") {
+      doc.text(`Relatório Anual - ${anoSelecionado}`, 14, 15);
+      const body = relatorioAnual.map(item => {
+        const taxaConclusao = item.total > 0 ? (item.completos / item.total) * 100 : 0;
+        return [
+          item.mes,
+          item.completos,
+          item.parciais,
+          item.pendentes,
+          item.total,
+          Math.round(taxaConclusao) + "%"
+        ];
+      });
+      autoTable(doc, {
+        startY: 25,
+        head: [["Mês", "Completos", "Parciais", "Pendentes", "Total", "Taxa de Conclusão"]],
+        body,
+        theme: 'grid',
+        headStyles: { fillColor: [220, 38, 38] },
+        styles: { fontSize: 10 },
+      });
+    }
+    doc.save(`relatorio_${tipoRelatorio}_${mesSelecionado || anoSelecionado}.pdf`);
+  };
+
+  // Função para exportar relatório conforme o tipo selecionado
+  const handleExport = () => {
+    if (tipoRelatorio === "resumo") {
+      const data = [
+        {
+          Mês: mesesDoAno.find(m => m.value === mesSelecionado)?.label,
+          Completos: estatisticas.completos,
+          Parciais: estatisticas.parciais,
+          Pendentes: estatisticas.pendentes,
+          Total: estatisticas.total
+        }
+      ];
+      exportToCSV(`relatorio_resumo_${mesSelecionado}_${anoSelecionado}.csv`, data, ["Mês", "Completos", "Parciais", "Pendentes", "Total"]);
+    } else if (tipoRelatorio === "detalhado") {
+      const data = clientes.filter(c => c.ativo !== false).map(cliente => {
+        const { status, progresso, detalhes } = obterStatusCliente(cliente, mesSelecionado);
+        return {
+          Cliente: cliente.nome,
+          Colaborador: cliente.colaborador_responsavel,
+          Status: status,
+          "Data Fechamento": detalhes.dataFechamento ? "Sim" : "Não",
+          "Int. Fiscal": detalhes.integracaoFiscal ? "Sim" : "Não",
+          "Int. FOPAG": detalhes.integracaoFopag ? "Sim" : "Não",
+          "Sem Mov. FOPAG": detalhes.semMovimentoFopag ? "Sim" : "Não",
+          Progresso: Math.round(progresso) + "%"
+        };
+      });
+      exportToCSV(`relatorio_detalhado_${mesSelecionado}_${anoSelecionado}.csv`, data, ["Cliente", "Colaborador", "Status", "Data Fechamento", "Int. Fiscal", "Int. FOPAG", "Sem Mov. FOPAG", "Progresso"]);
+    } else if (tipoRelatorio === "anual") {
+      const data = relatorioAnual.map(item => ({
+        Mês: item.mes,
+        Completos: item.completos,
+        Parciais: item.parciais,
+        Pendentes: item.pendentes,
+        Total: item.total,
+        "Taxa de Conclusão": Math.round(item.total > 0 ? (item.completos / item.total) * 100 : 0) + "%"
+      }));
+      exportToCSV(`relatorio_anual_${anoSelecionado}.csv`, data, ["Mês", "Completos", "Parciais", "Pendentes", "Total", "Taxa de Conclusão"]);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900">
@@ -190,9 +310,13 @@ const Relatorios = () => {
                     </>
                   )}
                   
-                  <Button className="bg-red-600 hover:bg-red-700">
+                  <Button className="bg-red-600 hover:bg-red-700" onClick={handleExport}>
                     <Download className="h-4 w-4 mr-2" />
-                    Exportar
+                    Exportar CSV
+                  </Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700 ml-2" onClick={handleExportPDF}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar PDF
                   </Button>
                 </div>
               </CardContent>

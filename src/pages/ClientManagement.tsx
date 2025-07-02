@@ -18,7 +18,7 @@ const ClientManagement = () => {
     setClienteSelecionado,
   } = useAppStore();
   
-  const { clientes, addCliente, updateCliente } = useClientes();
+  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes();
   const [busca, setBusca] = useState("");
   const [showImportExport, setShowImportExport] = useState(false);
   const [showAddClient, setShowAddClient] = useState(false);
@@ -54,6 +54,12 @@ const ClientManagement = () => {
   const abrirEdicaoCliente = (cliente: Cliente) => {
     setClienteParaEditar(cliente);
     setShowEditClient(true);
+  };
+
+  const handleDeleteCliente = (cliente: Cliente) => {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${cliente.nome}"? Essa ação não pode ser desfeita.`)) {
+      deleteCliente(cliente.id);
+    }
   };
 
   if (clienteSelecionado) {
@@ -116,7 +122,6 @@ const ClientManagement = () => {
             <ClientList 
               clientes={clientesFiltrados} 
               onClienteClick={setClienteSelecionado}
-              onEditCliente={abrirEdicaoCliente}
             />
           </main>
         </SidebarInset>

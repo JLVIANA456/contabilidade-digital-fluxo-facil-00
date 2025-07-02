@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -10,11 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import EditClientDialog from "@/components/EditClientDialog";
 
 const ClientRegistration = () => {
   const { setClienteSelecionado } = useAppStore();
-  const { clientes, addCliente } = useClientes();
+  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes();
   const [showAddClient, setShowAddClient] = useState(false);
+  const [showEditClient, setShowEditClient] = useState(false);
+  const [clienteParaEditar, setClienteParaEditar] = useState<Cliente | null>(null);
   const navigate = useNavigate();
 
   const adicionarCliente = async (novoCliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => {
@@ -24,6 +26,17 @@ const ClientRegistration = () => {
   const handleClienteClick = (cliente: Cliente) => {
     setClienteSelecionado(cliente);
     navigate('/gestao-clientes');
+  };
+
+  const handleEditCliente = (cliente: Cliente) => {
+    setClienteParaEditar(cliente);
+    setShowEditClient(true);
+  };
+
+  const handleDeleteCliente = (cliente: Cliente) => {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${cliente.nome}"? Essa ação não pode ser desfeita.`)) {
+      deleteCliente(cliente.id);
+    }
   };
 
   return (
@@ -73,7 +86,12 @@ const ClientRegistration = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ClientListTable clientes={clientes} onClienteClick={handleClienteClick} />
+                  <ClientListTable 
+                    clientes={clientes} 
+                    onClienteClick={handleClienteClick}
+                    onEditCliente={handleEditCliente}
+                    onDeleteCliente={handleDeleteCliente}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -83,6 +101,12 @@ const ClientRegistration = () => {
 
       {/* Dialog de Cadastro */}
       <AddClientDialog open={showAddClient} onOpenChange={setShowAddClient} onAddCliente={adicionarCliente} />
+      <EditClientDialog 
+        open={showEditClient} 
+        onOpenChange={setShowEditClient} 
+        cliente={clienteParaEditar}
+        onUpdateCliente={updateCliente}
+      />
     </SidebarProvider>
   );
 };

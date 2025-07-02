@@ -100,12 +100,10 @@ export function AppSidebar() {
       <Sidebar className="border-r border-gray-200/50 bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 dark:border-gray-800/50">
         <SidebarHeader className="p-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="JLV Flash Pro Logo" className="w-8 h-8 rounded-lg" />
             {state !== "collapsed" && (
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white font-sans">ContábilPro</h1>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white font-sans">JLV Flash Pro</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-sans">Gestão Contábil</p>
               </div>
             )}
