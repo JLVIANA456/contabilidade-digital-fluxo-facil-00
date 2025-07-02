@@ -9,10 +9,37 @@ import { useClientes } from "@/hooks/useClientes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const { clientes } = useClientes();
   const [analisesSelecionada, setAnalisesSelecionada] = useState("regime-tributario");
+  const [statusMensalData, setStatusMensalData] = useState<Record<string, any>>({});
+
+  // Fetch status mensal data
+  useEffect(() => {
+    const fetchStatusMensal = async () => {
+      const { data, error } = await supabase
+        .from('status_mensal')
+        .select('*')
+        .eq('ano', new Date().getFullYear());
+
+      if (!error && data) {
+        const statusByClient: Record<string, Record<string, any>> = {};
+        data.forEach(status => {
+          if (!statusByClient[status.cliente_id]) {
+            statusByClient[status.cliente_id] = {};
+          }
+          statusByClient[status.cliente_id][status.mes] = status;
+        });
+        setStatusMensalData(statusByClient);
+      }
+    };
+
+    if (clientes.length > 0) {
+      fetchStatusMensal();
+    }
+  }, [clientes]);
 
   // Estatísticas do dashboard
   const totalClientes = clientes.length;
@@ -24,7 +51,12 @@ const Dashboard = () => {
   const mesAtual = new Date().toLocaleString('pt-BR', {
     month: 'long'
   }).toLowerCase();
-  const clientesComFolhaAtualizada = clientes.filter(c => c.statusMensal?.[mesAtual]?.dataFechamento && c.ativo !== false).length;
+  
+  const clientesComFolhaAtualizada = clientes.filter(c => {
+    if (c.ativo === false) return false;
+    const clienteStatus = statusMensalData[c.id];
+    return clienteStatus && clienteStatus[mesAtual] && clienteStatus[mesAtual].data_fechamento;
+  }).length;
 
   // Dados para os diferentes tipos de análises
   const dadosAnalises = {
