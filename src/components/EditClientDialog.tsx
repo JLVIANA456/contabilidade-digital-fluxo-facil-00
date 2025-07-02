@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ const EditClientDialog = ({
   const [salvando, setSalvando] = useState(false);
 
   // Atualizar dados quando o cliente muda
-  useState(() => {
+  useEffect(() => {
     setDadosEdicao(cliente);
   }, [cliente]);
 
