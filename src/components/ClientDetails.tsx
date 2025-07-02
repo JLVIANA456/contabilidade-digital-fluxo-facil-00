@@ -27,7 +27,8 @@ const ClientDetails = ({
   onAtualizar
 }: ClientDetailsProps) => {
   const [dadosEdicao, setDadosEdicao] = useState<Cliente>(cliente);
-  const [mesDialogAberto, setMesDialogAberto] = useState<string | null>(null);
+  const [mesArquivosAberto, setMesArquivosAberto] = useState<string | null>(null);
+  const [mesAnotacoesAberto, setMesAnotacoesAberto] = useState<string | null>(null);
   const { statusMensal, updateStatusMensal } = useStatusMensal(cliente.id);
   
   const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -83,7 +84,12 @@ const ClientDetails = ({
 
   const abrirModalArquivos = (mes: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setMesDialogAberto(mes);
+    setMesArquivosAberto(mes);
+  };
+
+  const abrirModalAnotacoes = (mes: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMesAnotacoesAberto(mes);
   };
 
   return (
@@ -235,7 +241,7 @@ const ClientDetails = ({
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={e => abrirModalArquivos(mes, e)} 
+                                onClick={e => abrirModalAnotacoes(mes, e)} 
                                 className="h-6 px-2 text-xs"
                               >
                                 <MessageSquare className="h-3 w-3 mr-1" />
@@ -373,38 +379,103 @@ const ClientDetails = ({
         </Tabs>
       </div>
 
-      {/* Dialog para detalhes do mês */}
-      <Dialog open={!!mesDialogAberto} onOpenChange={() => setMesDialogAberto(null)}>
+      {/* Dialog para upload de arquivos */}
+      <Dialog open={!!mesArquivosAberto} onOpenChange={() => setMesArquivosAberto(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="capitalize">
-              Detalhes de {mesDialogAberto}
+            <DialogTitle className="capitalize flex items-center">
+              <Upload className="h-5 w-5 mr-2 text-blue-600" />
+              Upload de Arquivos - {mesArquivosAberto}
             </DialogTitle>
             <DialogDescription>
-              Gerencie arquivos e anotações para este mês
+              Faça upload dos arquivos relacionados a este mês
             </DialogDescription>
           </DialogHeader>
 
-          {mesDialogAberto && (
+          {mesArquivosAberto && (
+            <div className="space-y-6">
+              {/* Área de Upload */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+                <div className="text-center">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Clique para fazer upload ou arraste arquivos aqui
+                      </span>
+                      <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple />
+                    </label>
+                    <p className="mt-2 text-xs text-gray-500">
+                      PNG, JPG, PDF até 10MB cada
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de arquivos (placeholder) */}
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Arquivos Enviados</Label>
+                <div className="border rounded-lg p-4 text-center text-gray-500">
+                  Nenhum arquivo enviado ainda
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setMesArquivosAberto(null)}
+                >
+                  Cancelar
+                </Button>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Fazer Upload
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para anotações */}
+      <Dialog open={!!mesAnotacoesAberto} onOpenChange={() => setMesAnotacoesAberto(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="capitalize flex items-center">
+              <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
+              Anotações - {mesAnotacoesAberto}
+            </DialogTitle>
+            <DialogDescription>
+              Adicione anotações e observações para este mês
+            </DialogDescription>
+          </DialogHeader>
+
+          {mesAnotacoesAberto && (
             <div className="space-y-6">
               {/* Anotações */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5 text-green-600" />
-                  <Label className="text-base font-medium">Anotações</Label>
-                </div>
-                
+                <Label className="text-base font-medium">Anotações</Label>
                 <Textarea 
                   placeholder="Digite suas anotações para este mês..." 
-                  value={statusMensal[mesDialogAberto]?.anotacoes || ''} 
-                  onChange={e => atualizarStatusMensal(mesDialogAberto, 'anotacoes', e.target.value)} 
-                  rows={4} 
+                  value={statusMensal[mesAnotacoesAberto]?.anotacoes || ''} 
+                  onChange={e => atualizarStatusMensal(mesAnotacoesAberto, 'anotacoes', e.target.value)} 
+                  rows={6} 
                 />
               </div>
 
-              <div className="flex justify-end">
-                <Button onClick={() => setMesDialogAberto(null)}>
-                  Fechar
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setMesAnotacoesAberto(null)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={() => setMesAnotacoesAberto(null)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Anotações
                 </Button>
               </div>
             </div>
