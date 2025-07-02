@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,94 +12,46 @@ import ClientDetails from "@/components/ClientDetails";
 import ImportExportDialog from "@/components/ImportExportDialog";
 import AddClientDialog from "@/components/AddClientDialog";
 import { useAppStore } from "@/store/useAppStore";
-
-export interface Cliente {
-  id: string;
-  nome: string;
-  cnpjCpf: string;
-  regimeTributario: 'Simples Nacional' | 'Lucro Presumido' | 'Lucro Real';
-  colaboradorResponsavel: 'Sheila' | 'Bruna' | 'Nilcea' | 'Natiele';
-  dataEntrada?: string;
-  dataSaida?: string;
-  ativo: boolean;
-  statusMensal: {
-    [mes: string]: {
-      dataFechamento: string | null;
-      integracaoFiscal: boolean;
-      integracaoFopag: boolean;
-      semMovimentoFopag: boolean;
-      sm: boolean;
-      formaEnvio: string;
-      arquivos: File[];
-      anotacoes: string;
-    };
-  };
-}
+import { useClientes, Cliente } from "@/hooks/useClientes";
 
 const Index = () => {
   const {
-    clientes,
     clienteSelecionado,
-    setClientes,
     setClienteSelecionado,
-    addCliente,
-    updateCliente
   } = useAppStore();
+  
+  const { clientes, loading, addCliente, updateCliente } = useClientes();
   
   const [busca, setBusca] = useState("");
   const [showImportExport, setShowImportExport] = useState(false);
   const [showAddClient, setShowAddClient] = useState(false);
 
-  // Carregar dados do localStorage na inicialização
-  useEffect(() => {
-    const clientesSalvos = localStorage.getItem('clientes-contabilidade');
-    if (clientesSalvos) {
-      setClientes(JSON.parse(clientesSalvos));
-    }
-  }, [setClientes]);
-
   const clientesFiltrados = clientes.filter(cliente =>
     cliente.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    cliente.cnpjCpf.includes(busca) ||
-    cliente.colaboradorResponsavel.toLowerCase().includes(busca.toLowerCase())
+    (cliente.cnpj_cpf && cliente.cnpj_cpf.includes(busca)) ||
+    cliente.colaborador_responsavel.toLowerCase().includes(busca.toLowerCase())
   );
 
   // Estatísticas do dashboard
   const totalClientes = clientes.length;
-  const clientesAtivos = clientes.filter(c => c.ativo !== false).length;
-  const clientesSimples = clientes.filter(c => c.regimeTributario === 'Simples Nacional' && c.ativo !== false).length;
+  const clientesAtivos = clientes.filter(c => c.ativo).length;
+  const clientesSimples = clientes.filter(c => c.regime_tributario === 'Simples Nacional' && c.ativo).length;
   const mesAtual = new Date().toLocaleString('pt-BR', { month: 'long' }).toLowerCase();
-  const clientesComFolhaAtualizada = clientes.filter(c => 
-    c.statusMensal[mesAtual]?.dataFechamento && c.ativo !== false
-  ).length;
 
-  const adicionarCliente = (novoCliente: Omit<Cliente, 'id' | 'statusMensal' | 'ativo'>) => {
-    const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    
-    const statusMensalInicial = mesesDoAno.reduce((acc, mes) => {
-      acc[mes] = {
-        dataFechamento: null,
-        integracaoFiscal: false,
-        integracaoFopag: false,
-        semMovimentoFopag: false,
-        sm: false,
-        formaEnvio: '',
-        arquivos: [],
-        anotacoes: ''
-      };
-      return acc;
-    }, {} as Cliente['statusMensal']);
-
-    const cliente: Cliente = {
-      ...novoCliente,
-      id: Date.now().toString(),
-      ativo: true,
-      statusMensal: statusMensalInicial
-    };
-
-    addCliente(cliente);
+  const adicionarCliente = async (novoCliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => {
+    await addCliente(novoCliente);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando clientes...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (clienteSelecionado) {
     return (
@@ -174,7 +126,7 @@ const Index = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600 font-sans dark:text-red-500">{clientesComFolhaAtualizada}</div>
+                  <div className="text-3xl font-bold text-green-600 font-sans dark:text-red-500">0</div>
                   <p className="text-xs text-gray-500 font-sans capitalize dark:text-red-400">{mesAtual}</p>
                 </CardContent>
               </Card>
@@ -187,9 +139,7 @@ const Index = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-purple-600 font-sans dark:text-red-500">
-                    {clientesAtivos > 0 ? Math.round((clientesComFolhaAtualizada / clientesAtivos) * 100) : 0}%
-                  </div>
+                  <div className="text-3xl font-bold text-purple-600 font-sans dark:text-red-500">0%</div>
                   <p className="text-xs text-gray-500 font-sans dark:text-red-400">Este mês</p>
                 </CardContent>
               </Card>
@@ -230,7 +180,7 @@ const Index = () => {
         open={showImportExport}
         onOpenChange={setShowImportExport}
         clientes={clientes}
-        onImportClientes={setClientes}
+        onImportClientes={() => {}}
       />
 
       <AddClientDialog

@@ -22,8 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UserX, Trash2 } from "lucide-react";
-import { Cliente } from "@/pages/Index";
-import { useAppStore } from "@/store/useAppStore";
+import { Cliente, useClientes } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 
 interface ClientActionsProps {
@@ -31,22 +30,18 @@ interface ClientActionsProps {
 }
 
 export function ClientActions({ cliente }: ClientActionsProps) {
-  const { deleteCliente, inactivateCliente } = useAppStore();
+  const { deleteCliente, inactivateCliente } = useClientes();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showInactivateDialog, setShowInactivateDialog] = useState(false);
   const [dataSaida, setDataSaida] = useState("");
 
-  const handleDelete = () => {
-    deleteCliente(cliente.id);
+  const handleDelete = async () => {
+    await deleteCliente(cliente.id);
     setShowDeleteDialog(false);
-    toast({
-      title: "Cliente excluído",
-      description: `${cliente.nome} foi excluído com sucesso.`,
-    });
   };
 
-  const handleInactivate = () => {
+  const handleInactivate = async () => {
     if (!dataSaida) {
       toast({
         title: "Data obrigatória",
@@ -56,16 +51,12 @@ export function ClientActions({ cliente }: ClientActionsProps) {
       return;
     }
 
-    inactivateCliente(cliente.id, dataSaida);
+    await inactivateCliente(cliente.id, dataSaida);
     setShowInactivateDialog(false);
     setDataSaida("");
-    toast({
-      title: "Cliente inativado",
-      description: `${cliente.nome} foi inativado com data de saída ${new Date(dataSaida).toLocaleDateString('pt-BR')}.`,
-    });
   };
 
-  if (cliente.ativo === false) {
+  if (!cliente.ativo) {
     return (
       <div className="flex gap-2">
         <Button

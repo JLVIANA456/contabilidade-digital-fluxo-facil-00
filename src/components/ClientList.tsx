@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, User, Building2, Calendar } from "lucide-react";
-import { Cliente } from "@/pages/Index";
+import { Cliente } from "@/hooks/useClientes";
 import { ClientActions } from "@/components/ClientActions";
 
 interface ClientListProps {
@@ -36,7 +36,7 @@ const ClientList = ({ clientes, onClienteClick }: ClientListProps) => {
   };
 
   const getStatusColor = (ativo: boolean) => {
-    return ativo !== false 
+    return ativo 
       ? 'bg-green-100 text-green-800 border-green-200'
       : 'bg-red-100 text-red-800 border-red-200';
   };
@@ -56,7 +56,7 @@ const ClientList = ({ clientes, onClienteClick }: ClientListProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {clientes.map((cliente) => (
-        <Card key={cliente.id} className={`hover:shadow-lg transition-shadow duration-200 border-l-4 ${cliente.ativo === false ? 'border-l-red-500 opacity-75' : 'border-l-green-500'}`}>
+        <Card key={cliente.id} className={`hover:shadow-lg transition-shadow duration-200 border-l-4 ${!cliente.ativo ? 'border-l-red-500 opacity-75' : 'border-l-green-500'}`}>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
@@ -65,14 +65,14 @@ const ClientList = ({ clientes, onClienteClick }: ClientListProps) => {
                     {cliente.nome}
                   </h3>
                   <Badge variant="outline" className={getStatusColor(cliente.ativo)}>
-                    {cliente.ativo !== false ? 'Ativo' : 'Inativo'}
+                    {cliente.ativo ? 'Ativo' : 'Inativo'}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 font-mono">{cliente.cnpjCpf}</p>
-                {cliente.dataSaida && (
+                <p className="text-sm text-gray-600 font-mono">{cliente.cnpj_cpf || 'N/A'}</p>
+                {cliente.data_saida && (
                   <div className="flex items-center text-sm text-red-600 mt-1">
                     <Calendar className="h-4 w-4 mr-1" />
-                    <span>Saída: {new Date(cliente.dataSaida).toLocaleDateString('pt-BR')}</span>
+                    <span>Saída: {new Date(cliente.data_saida).toLocaleDateString('pt-BR')}</span>
                   </div>
                 )}
               </div>
@@ -81,22 +81,22 @@ const ClientList = ({ clientes, onClienteClick }: ClientListProps) => {
             <div className="space-y-3 mb-4">
               <div className="flex items-center text-sm text-gray-600">
                 <User className="h-4 w-4 mr-2" />
-                <Badge variant="outline" className={getColaboradorColor(cliente.colaboradorResponsavel)}>
-                  {cliente.colaboradorResponsavel}
+                <Badge variant="outline" className={getColaboradorColor(cliente.colaborador_responsavel)}>
+                  {cliente.colaborador_responsavel}
                 </Badge>
               </div>
 
               <div className="flex items-center text-sm text-gray-600">
                 <Building2 className="h-4 w-4 mr-2" />
-                <Badge variant="outline" className={getRegimeColor(cliente.regimeTributario)}>
-                  {cliente.regimeTributario}
+                <Badge variant="outline" className={getRegimeColor(cliente.regime_tributario)}>
+                  {cliente.regime_tributario}
                 </Badge>
               </div>
 
-              {cliente.dataEntrada && (
+              {cliente.data_entrada && (
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="h-4 w-4 mr-2" />
-                  <span>Entrada: {new Date(cliente.dataEntrada).toLocaleDateString('pt-BR')}</span>
+                  <span>Entrada: {new Date(cliente.data_entrada).toLocaleDateString('pt-BR')}</span>
                 </div>
               )}
             </div>

@@ -9,7 +9,139 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      arquivos: {
+        Row: {
+          created_at: string
+          id: string
+          nome_arquivo: string
+          status_mensal_id: string
+          tamanho_arquivo: number | null
+          tipo_arquivo: string | null
+          url_arquivo: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_arquivo: string
+          status_mensal_id: string
+          tamanho_arquivo?: number | null
+          tipo_arquivo?: string | null
+          url_arquivo?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_arquivo?: string
+          status_mensal_id?: string
+          tamanho_arquivo?: number | null
+          tipo_arquivo?: string | null
+          url_arquivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_status_mensal_id_fkey"
+            columns: ["status_mensal_id"]
+            isOneToOne: false
+            referencedRelation: "status_mensal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          ativo: boolean
+          cnpj_cpf: string | null
+          colaborador_responsavel: Database["public"]["Enums"]["colaborador_responsavel"]
+          created_at: string
+          data_entrada: string | null
+          data_saida: string | null
+          id: string
+          nome: string
+          regime_tributario: Database["public"]["Enums"]["regime_tributario"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj_cpf?: string | null
+          colaborador_responsavel?: Database["public"]["Enums"]["colaborador_responsavel"]
+          created_at?: string
+          data_entrada?: string | null
+          data_saida?: string | null
+          id?: string
+          nome: string
+          regime_tributario?: Database["public"]["Enums"]["regime_tributario"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj_cpf?: string | null
+          colaborador_responsavel?: Database["public"]["Enums"]["colaborador_responsavel"]
+          created_at?: string
+          data_entrada?: string | null
+          data_saida?: string | null
+          id?: string
+          nome?: string
+          regime_tributario?: Database["public"]["Enums"]["regime_tributario"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      status_mensal: {
+        Row: {
+          ano: number
+          anotacoes: string | null
+          cliente_id: string
+          created_at: string
+          data_fechamento: string | null
+          forma_envio: string | null
+          id: string
+          integracao_fiscal: boolean
+          integracao_fopag: boolean
+          mes: string
+          sem_movimento_fopag: boolean
+          sm: boolean
+          updated_at: string
+        }
+        Insert: {
+          ano?: number
+          anotacoes?: string | null
+          cliente_id: string
+          created_at?: string
+          data_fechamento?: string | null
+          forma_envio?: string | null
+          id?: string
+          integracao_fiscal?: boolean
+          integracao_fopag?: boolean
+          mes: string
+          sem_movimento_fopag?: boolean
+          sm?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          anotacoes?: string | null
+          cliente_id?: string
+          created_at?: string
+          data_fechamento?: string | null
+          forma_envio?: string | null
+          id?: string
+          integracao_fiscal?: boolean
+          integracao_fopag?: boolean
+          mes?: string
+          sem_movimento_fopag?: boolean
+          sm?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_mensal_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +150,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      colaborador_responsavel: "Sheila" | "Bruna" | "Nilcea" | "Natiele"
+      regime_tributario: "Simples Nacional" | "Lucro Presumido" | "Lucro Real"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +266,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      colaborador_responsavel: ["Sheila", "Bruna", "Nilcea", "Natiele"],
+      regime_tributario: ["Simples Nacional", "Lucro Presumido", "Lucro Real"],
+    },
   },
 } as const
