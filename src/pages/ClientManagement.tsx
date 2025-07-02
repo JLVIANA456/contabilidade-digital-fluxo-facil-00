@@ -33,6 +33,22 @@ const ClientManagement = () => {
     await addCliente(novoCliente);
   };
 
+  const importarClientesEmLote = async (clientesImportados: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>[]) => {
+    console.log('Importando', clientesImportados.length, 'clientes em lote...');
+    
+    // Importar cada cliente individualmente
+    for (const cliente of clientesImportados) {
+      try {
+        await addCliente(cliente);
+        console.log('Cliente importado:', cliente.nome);
+      } catch (error) {
+        console.error('Erro ao importar cliente:', cliente.nome, error);
+      }
+    }
+    
+    console.log('Importação em lote concluída');
+  };
+
   if (clienteSelecionado) {
     return (
       <SidebarProvider>
@@ -100,7 +116,7 @@ const ClientManagement = () => {
         open={showImportExport} 
         onOpenChange={setShowImportExport} 
         clientes={clientes} 
-        onImportClientes={() => {}} 
+        onImportClientes={importarClientesEmLote} 
       />
 
       <AddClientDialog 
