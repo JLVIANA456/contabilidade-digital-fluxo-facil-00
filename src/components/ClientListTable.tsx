@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Calendar } from "lucide-react";
-import { Cliente } from "@/pages/Index";
+import { Cliente } from "@/hooks/useClientes";
 
 interface ClientListTableProps {
   clientes: Cliente[];
@@ -35,7 +35,7 @@ const ClientListTable = ({ clientes, onClienteClick }: ClientListTableProps) => 
   };
 
   const getStatusColor = (ativo: boolean) => {
-    return ativo !== false 
+    return ativo 
       ? 'bg-green-100 text-green-800 border-green-200'
       : 'bg-red-100 text-red-800 border-red-200';
   };
@@ -69,35 +69,35 @@ const ClientListTable = ({ clientes, onClienteClick }: ClientListTableProps) => 
               <TableCell>
                 <div>
                   <div className="font-medium text-gray-900">{cliente.nome}</div>
-                  {cliente.dataSaida && (
+                  {cliente.data_saida && (
                     <div className="flex items-center text-sm text-red-600 mt-1">
                       <Calendar className="h-3 w-3 mr-1" />
-                      <span>Saída: {new Date(cliente.dataSaida).toLocaleDateString('pt-BR')}</span>
+                      <span>Saída: {new Date(cliente.data_saida).toLocaleDateString('pt-BR')}</span>
                     </div>
                   )}
                 </div>
               </TableCell>
               <TableCell>
-                <span className="font-mono text-sm">{cliente.cnpjCpf}</span>
+                <span className="font-mono text-sm">{cliente.cnpj_cpf}</span>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={getRegimeColor(cliente.regimeTributario)}>
-                  {cliente.regimeTributario}
+                <Badge variant="outline" className={getRegimeColor(cliente.regime_tributario)}>
+                  {cliente.regime_tributario}
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={getColaboradorColor(cliente.colaboradorResponsavel)}>
-                  {cliente.colaboradorResponsavel}
+                <Badge variant="outline" className={getColaboradorColor(cliente.colaborador_responsavel)}>
+                  {cliente.colaborador_responsavel}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge variant="outline" className={getStatusColor(cliente.ativo)}>
-                  {cliente.ativo !== false ? 'Ativo' : 'Inativo'}
+                  {cliente.ativo ? 'Ativo' : 'Inativo'}
                 </Badge>
               </TableCell>
               <TableCell>
                 <span className="text-sm text-gray-600">
-                  {cliente.dataEntrada ? new Date(cliente.dataEntrada).toLocaleDateString('pt-BR') : '-'}
+                  {cliente.data_entrada ? new Date(cliente.data_entrada).toLocaleDateString('pt-BR') : '-'}
                 </span>
               </TableCell>
               <TableCell className="text-center">

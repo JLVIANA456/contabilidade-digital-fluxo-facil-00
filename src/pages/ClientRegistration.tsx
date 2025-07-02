@@ -1,59 +1,28 @@
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import AddClientDialog from "@/components/AddClientDialog";
 import ClientListTable from "@/components/ClientListTable";
 import { useAppStore } from "@/store/useAppStore";
-import { Cliente } from "./Index";
+import { Cliente, useClientes } from "@/hooks/useClientes";
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const ClientRegistration = () => {
-  const {
-    clientes,
-    addCliente,
-    setClientes
-  } = useAppStore();
+  const { setClienteSelecionado } = useAppStore();
+  const { clientes, addCliente } = useClientes();
   const [showAddClient, setShowAddClient] = useState(false);
   const navigate = useNavigate();
 
-  // Carregar dados do localStorage na inicialização
-  useEffect(() => {
-    const clientesSalvos = localStorage.getItem('clientes-contabilidade');
-    if (clientesSalvos) {
-      setClientes(JSON.parse(clientesSalvos));
-    }
-  }, [setClientes]);
-
-  const adicionarCliente = (novoCliente: Omit<Cliente, 'id' | 'statusMensal' | 'ativo'>) => {
-    const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    const statusMensalInicial = mesesDoAno.reduce((acc, mes) => {
-      acc[mes] = {
-        dataFechamento: null,
-        integracaoFiscal: false,
-        integracaoFopag: false,
-        semMovimentoFopag: false,
-        sm: false,
-        formaEnvio: '',
-        arquivos: [],
-        anotacoes: ''
-      };
-      return acc;
-    }, {} as Cliente['statusMensal']);
-
-    const cliente: Cliente = {
-      ...novoCliente,
-      id: Date.now().toString(),
-      ativo: true,
-      statusMensal: statusMensalInicial
-    };
-    addCliente(cliente);
+  const adicionarCliente = async (novoCliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => {
+    await addCliente(novoCliente);
   };
 
   const handleClienteClick = (cliente: Cliente) => {
+    setClienteSelecionado(cliente);
     navigate('/gestao-clientes');
   };
 

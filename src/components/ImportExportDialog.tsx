@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
-import { Cliente } from "@/pages/Index";
+import { Cliente } from "@/hooks/useClientes";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -67,11 +68,11 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
 
     const linhas = clientes.map(cliente => [
       cliente.nome,
-      cliente.cnpjCpf,
-      cliente.regimeTributario,
-      cliente.colaboradorResponsavel,
-      cliente.dataEntrada || '',
-      cliente.dataSaida || ''
+      cliente.cnpj_cpf || '',
+      cliente.regime_tributario,
+      cliente.colaborador_responsavel,
+      cliente.data_entrada || '',
+      cliente.data_saida || ''
     ]);
 
     const csvContent = [
@@ -116,10 +117,7 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
       // Pular o cabeçalho
       const dadosClientes = linhas.slice(1).filter(linha => linha.trim());
       
-      const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                          'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-      
-      const clientesImportados: Cliente[] = dadosClientes.map((linha, index) => {
+      const clientesImportados: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>[] = dadosClientes.map((linha, index) => {
         const colunas = linha.split(',').map(col => col.trim().replace(/"/g, ''));
         
         // Validar apenas Razão Social como campo obrigatório
@@ -127,34 +125,19 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
           throw new Error(`Linha ${index + 2}: Razão Social é obrigatória`);
         }
 
-        const statusMensalInicial = mesesDoAno.reduce((acc, mes) => {
-          acc[mes] = {
-            dataFechamento: null,
-            integracaoFiscal: false,
-            integracaoFopag: false,
-            semMovimentoFopag: false,
-            sm: false,
-            formaEnvio: '',
-            arquivos: [],
-            anotacoes: ''
-          };
-          return acc;
-        }, {} as Cliente['statusMensal']);
-
         return {
-          id: Date.now().toString() + index,
           nome: colunas[0],
-          cnpjCpf: '',
-          regimeTributario: 'Simples Nacional' as any,
-          colaboradorResponsavel: 'Sheila' as any,
-          dataEntrada: '',
-          dataSaida: '',
-          ativo: true,
-          statusMensal: statusMensalInicial
+          cnpj_cpf: '',
+          regime_tributario: 'Simples Nacional' as any,
+          colaborador_responsavel: 'Sheila' as any,
+          data_entrada: null,
+          data_saida: null,
+          ativo: true
         };
       });
 
-      onImportClientes([...clientes, ...clientesImportados]);
+      // Chamar função de import que deve ser implementada no componente pai
+      onImportClientes(clientesImportados as Cliente[]);
       setArquivo(null);
       onOpenChange(false);
 

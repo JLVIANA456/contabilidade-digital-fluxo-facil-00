@@ -14,24 +14,22 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAppStore } from "@/store/useAppStore";
 import { Badge } from "@/components/ui/badge";
 import ImportExportDialog from "@/components/ImportExportDialog";
 import AddClientDialog from "@/components/AddClientDialog";
 import SettingsDialog from "@/components/SettingsDialog";
-import { Cliente } from "@/pages/Index";
+import { Cliente, useClientes } from "@/hooks/useClientes";
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { clientes, addCliente, setClientes } = useAppStore();
+  const { clientes, addCliente } = useClientes();
   const [showImportExport, setShowImportExport] = useState(false);
   const [showAddClient, setShowAddClient] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const location = useLocation();
   
   const totalClientes = clientes.length;
-  const clientesAtivos = clientes.filter(c => c.ativo !== false).length;
-  const clientesSimples = clientes.filter(c => c.regimeTributario === 'Simples Nacional' && c.ativo !== false).length;
+  const clientesAtivos = clientes.filter(c => c.ativo).length;
   
   const menuItems = [
     {
@@ -78,32 +76,8 @@ export function AppSidebar() {
     },
   ];
 
-  const adicionarCliente = (novoCliente: Omit<Cliente, 'id' | 'statusMensal' | 'ativo'>) => {
-    const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    
-    const statusMensalInicial = mesesDoAno.reduce((acc, mes) => {
-      acc[mes] = {
-        dataFechamento: null,
-        integracaoFiscal: false,
-        integracaoFopag: false,
-        semMovimentoFopag: false,
-        sm: false,
-        formaEnvio: '',
-        arquivos: [],
-        anotacoes: ''
-      };
-      return acc;
-    }, {} as Cliente['statusMensal']);
-
-    const cliente: Cliente = {
-      ...novoCliente,
-      id: Date.now().toString(),
-      ativo: true,
-      statusMensal: statusMensalInicial
-    };
-
-    addCliente(cliente);
+  const adicionarCliente = async (novoCliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => {
+    await addCliente(novoCliente);
   };
 
   return (
@@ -180,7 +154,7 @@ export function AppSidebar() {
         open={showImportExport}
         onOpenChange={setShowImportExport}
         clientes={clientes}
-        onImportClientes={setClientes}
+        onImportClientes={() => {}}
       />
 
       <AddClientDialog

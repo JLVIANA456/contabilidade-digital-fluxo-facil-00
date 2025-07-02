@@ -6,31 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save } from "lucide-react";
-import { Cliente } from "@/pages/Index";
+import { Cliente } from "@/hooks/useClientes";
 import { toast } from "@/hooks/use-toast";
 
 interface AddClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddCliente: (cliente: Omit<Cliente, 'id' | 'statusMensal' | 'ativo'>) => void;
+  onAddCliente: (cliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>) => void;
 }
 
 const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogProps) => {
   const [formData, setFormData] = useState({
     nome: '',
-    cnpjCpf: '',
-    regimeTributario: 'Simples Nacional' as const,
-    colaboradorResponsavel: 'Sheila' as const,
-    dataEntrada: ''
+    cnpj_cpf: '',
+    regime_tributario: 'Simples Nacional' as const,
+    colaborador_responsavel: 'Sheila' as const,
+    data_entrada: '',
+    data_saida: '',
+    ativo: true
   });
 
   const resetForm = () => {
     setFormData({
       nome: '',
-      cnpjCpf: '',
-      regimeTributario: 'Simples Nacional',
-      colaboradorResponsavel: 'Sheila',
-      dataEntrada: ''
+      cnpj_cpf: '',
+      regime_tributario: 'Simples Nacional',
+      colaborador_responsavel: 'Sheila',
+      data_entrada: '',
+      data_saida: '',
+      ativo: true
     });
   };
 
@@ -49,14 +53,9 @@ const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogPr
     onAddCliente(formData);
     resetForm();
     onOpenChange(false);
-    
-    toast({
-      title: "Cliente adicionado com sucesso!",
-      description: `${formData.nome} foi cadastrado.`,
-    });
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -90,11 +89,11 @@ const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogPr
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="cnpjCpf">CNPJ/CPF</Label>
+              <Label htmlFor="cnpj_cpf">CNPJ/CPF</Label>
               <Input
-                id="cnpjCpf"
-                value={formData.cnpjCpf}
-                onChange={(e) => handleChange('cnpjCpf', e.target.value)}
+                id="cnpj_cpf"
+                value={formData.cnpj_cpf}
+                onChange={(e) => handleChange('cnpj_cpf', e.target.value)}
                 placeholder="00.000.000/0000-00"
               />
             </div>
@@ -102,8 +101,8 @@ const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogPr
             <div className="space-y-2">
               <Label htmlFor="regime">Regime Tributário</Label>
               <Select
-                value={formData.regimeTributario}
-                onValueChange={(value: any) => handleChange('regimeTributario', value)}
+                value={formData.regime_tributario}
+                onValueChange={(value: any) => handleChange('regime_tributario', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -119,8 +118,8 @@ const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogPr
             <div className="space-y-2">
               <Label htmlFor="colaborador">Colaborador Responsável</Label>
               <Select
-                value={formData.colaboradorResponsavel}
-                onValueChange={(value: any) => handleChange('colaboradorResponsavel', value)}
+                value={formData.colaborador_responsavel}
+                onValueChange={(value: any) => handleChange('colaborador_responsavel', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -134,13 +133,13 @@ const AddClientDialog = ({ open, onOpenChange, onAddCliente }: AddClientDialogPr
               </Select>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="dataEntrada">Data de Entrada</Label>
+            <div className="space-y-2">
+              <Label htmlFor="data_entrada">Data de Entrada</Label>
               <Input
-                id="dataEntrada"
+                id="data_entrada"
                 type="date"
-                value={formData.dataEntrada}
-                onChange={(e) => handleChange('dataEntrada', e.target.value)}
+                value={formData.data_entrada}
+                onChange={(e) => handleChange('data_entrada', e.target.value)}
               />
             </div>
           </div>
