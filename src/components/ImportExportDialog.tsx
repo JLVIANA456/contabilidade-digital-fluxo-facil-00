@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,11 +13,12 @@ interface ImportExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientes: Cliente[];
-  onImportClientes: (clientes: Cliente[]) => void;
+  onImportClientes: (clientes: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>[]) => Promise<void>;
 }
 
 const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: ImportExportDialogProps) => {
   const [arquivo, setArquivo] = useState<File | null>(null);
+  const [importando, setImportando] = useState(false);
 
   const baixarModelo = () => {
     const cabecalho = ['Razão Social *'];
@@ -107,6 +107,7 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
     }
 
     try {
+      setImportando(true);
       const texto = await arquivo.text();
       const linhas = texto.split('\n');
       
@@ -136,22 +137,28 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
         };
       });
 
-      // Chamar função de import que deve ser implementada no componente pai
-      onImportClientes(clientesImportados as Cliente[]);
+      console.log('Iniciando importação de', clientesImportados.length, 'clientes');
+      
+      // Chamar função de import que salvará no Supabase
+      await onImportClientes(clientesImportados);
+      
       setArquivo(null);
       onOpenChange(false);
 
       toast({
         title: "Importação concluída!",
-        description: `${clientesImportados.length} clientes foram importados com sucesso.`,
+        description: `${clientesImportados.length} clientes foram importados com sucesso no Supabase.`,
       });
 
     } catch (error) {
+      console.error('Erro na importação:', error);
       toast({
         title: "Erro na importação",
         description: error instanceof Error ? error.message : "Verifique o formato do arquivo.",
         variant: "destructive",
       });
+    } finally {
+      setImportando(false);
     }
   };
 
@@ -227,10 +234,10 @@ const ImportExportDialog = ({ open, onOpenChange, clientes, onImportClientes }: 
               <Button 
                 onClick={importarClientes}
                 className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 font-sans"
-                disabled={!arquivo}
+                disabled={!arquivo || importando}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Importar Dados
+                {importando ? 'Importando...' : 'Importar Dados'}
               </Button>
             </CardContent>
           </Card>

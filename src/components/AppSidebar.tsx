@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Users, FileSpreadsheet, Settings, Plus, TrendingUp, Calendar, BarChart3, FileText } from "lucide-react";
@@ -80,6 +79,22 @@ export function AppSidebar() {
     await addCliente(novoCliente);
   };
 
+  const importarClientesEmLote = async (clientesImportados: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>[]) => {
+    console.log('Importando', clientesImportados.length, 'clientes em lote...');
+    
+    // Importar cada cliente individualmente
+    for (const cliente of clientesImportados) {
+      try {
+        await addCliente(cliente);
+        console.log('Cliente importado:', cliente.nome);
+      } catch (error) {
+        console.error('Erro ao importar cliente:', cliente.nome, error);
+      }
+    }
+    
+    console.log('Importação em lote concluída');
+  };
+
   return (
     <>
       <Sidebar className="border-r border-gray-200/50 bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 dark:border-gray-800/50">
@@ -154,7 +169,7 @@ export function AppSidebar() {
         open={showImportExport}
         onOpenChange={setShowImportExport}
         clientes={clientes}
-        onImportClientes={() => {}}
+        onImportClientes={importarClientesEmLote}
       />
 
       <AddClientDialog
