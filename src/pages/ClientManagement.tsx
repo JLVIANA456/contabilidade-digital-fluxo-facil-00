@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import ClientList from "@/components/ClientList";
 import ClientDetails from "@/components/ClientDetails";
 import ImportExportDialog from "@/components/ImportExportDialog";
 import AddClientDialog from "@/components/AddClientDialog";
+import EditClientDialog from "@/components/EditClientDialog";
 import { useAppStore } from "@/store/useAppStore";
 import { Cliente, useClientes } from "@/hooks/useClientes";
 
@@ -22,6 +22,8 @@ const ClientManagement = () => {
   const [busca, setBusca] = useState("");
   const [showImportExport, setShowImportExport] = useState(false);
   const [showAddClient, setShowAddClient] = useState(false);
+  const [showEditClient, setShowEditClient] = useState(false);
+  const [clienteParaEditar, setClienteParaEditar] = useState<Cliente | null>(null);
 
   const clientesFiltrados = clientes.filter(cliente => 
     cliente.nome.toLowerCase().includes(busca.toLowerCase()) || 
@@ -47,6 +49,11 @@ const ClientManagement = () => {
     }
     
     console.log('Importação em lote concluída');
+  };
+
+  const abrirEdicaoCliente = (cliente: Cliente) => {
+    setClienteParaEditar(cliente);
+    setShowEditClient(true);
   };
 
   if (clienteSelecionado) {
@@ -106,7 +113,11 @@ const ClientManagement = () => {
             </Card>
 
             {/* Lista de Clientes */}
-            <ClientList clientes={clientesFiltrados} onClienteClick={setClienteSelecionado} />
+            <ClientList 
+              clientes={clientesFiltrados} 
+              onClienteClick={setClienteSelecionado}
+              onEditCliente={abrirEdicaoCliente}
+            />
           </main>
         </SidebarInset>
       </div>
@@ -123,6 +134,13 @@ const ClientManagement = () => {
         open={showAddClient} 
         onOpenChange={setShowAddClient} 
         onAddCliente={adicionarCliente} 
+      />
+
+      <EditClientDialog 
+        open={showEditClient} 
+        onOpenChange={setShowEditClient} 
+        cliente={clienteParaEditar}
+        onUpdateCliente={updateCliente}
       />
     </SidebarProvider>
   );
