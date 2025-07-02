@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,13 +7,13 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/AppSidebar";
 import { BarChart3, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { useClientes } from "@/hooks/useClientes";
 
 const Controle = () => {
-  const {
-    clientes
-  } = useAppStore();
+  const { clientes } = useClientes();
   const [mesSelecionado, setMesSelecionado] = useState<string>("");
   const [anoSelecionado, setAnoSelecionado] = useState<string>(new Date().getFullYear().toString());
+  
   const mesesDoAno = [{
     value: 'janeiro',
     label: 'Janeiro'
@@ -255,13 +254,13 @@ const Controle = () => {
                               <div className="flex items-center gap-3">
                                 <h3 className="font-medium text-gray-900">{cliente.nome}</h3>
                                 <Badge variant="outline" className="text-xs">
-                                  {cliente.colaboradorResponsavel}
+                                  {cliente.colaborador_responsavel}
                                 </Badge>
                                 <Badge variant="outline" className={status === 'completo' ? 'bg-green-100 text-green-800 border-green-200' : status === 'parcial' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-red-100 text-red-800 border-red-200'}>
                                   {status === 'completo' ? 'Completo' : status === 'parcial' ? 'Parcial' : 'Pendente'}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-gray-500 mt-1">{cliente.cnpjCpf}</p>
+                              <p className="text-sm text-gray-500 mt-1">{cliente.cnpj_cpf}</p>
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="text-right">

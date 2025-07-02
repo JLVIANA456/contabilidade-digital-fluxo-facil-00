@@ -5,36 +5,26 @@ import { Users, FileSpreadsheet, Calendar, TrendingUp, Building2, UserX, PieChar
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAppStore } from "@/store/useAppStore";
+import { useClientes } from "@/hooks/useClientes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 const Dashboard = () => {
-  const {
-    clientes,
-    setClientes
-  } = useAppStore();
+  const { clientes } = useClientes();
   const [analisesSelecionada, setAnalisesSelecionada] = useState("regime-tributario");
-
-  // Carregar dados do localStorage na inicialização
-  useEffect(() => {
-    const clientesSalvos = localStorage.getItem('clientes-contabilidade');
-    if (clientesSalvos) {
-      setClientes(JSON.parse(clientesSalvos));
-    }
-  }, [setClientes]);
 
   // Estatísticas do dashboard
   const totalClientes = clientes.length;
   const clientesAtivos = clientes.filter(c => c.ativo !== false).length;
   const clientesInativos = clientes.filter(c => c.ativo === false).length;
-  const clientesSimples = clientes.filter(c => c.regimeTributario === 'Simples Nacional' && c.ativo !== false).length;
-  const clientesLucroPresumido = clientes.filter(c => c.regimeTributario === 'Lucro Presumido' && c.ativo !== false).length;
-  const clientesLucroReal = clientes.filter(c => c.regimeTributario === 'Lucro Real' && c.ativo !== false).length;
+  const clientesSimples = clientes.filter(c => c.regime_tributario === 'Simples Nacional' && c.ativo !== false).length;
+  const clientesLucroPresumido = clientes.filter(c => c.regime_tributario === 'Lucro Presumido' && c.ativo !== false).length;
+  const clientesLucroReal = clientes.filter(c => c.regime_tributario === 'Lucro Real' && c.ativo !== false).length;
   const mesAtual = new Date().toLocaleString('pt-BR', {
     month: 'long'
   }).toLowerCase();
-  const clientesComFolhaAtualizada = clientes.filter(c => c.statusMensal[mesAtual]?.dataFechamento && c.ativo !== false).length;
+  const clientesComFolhaAtualizada = clientes.filter(c => c.statusMensal?.[mesAtual]?.dataFechamento && c.ativo !== false).length;
 
   // Dados para os diferentes tipos de análises
   const dadosAnalises = {

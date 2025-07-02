@@ -9,10 +9,11 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/AppSidebar";
 import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Download, Users } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { useClientes } from "@/hooks/useClientes";
 import { Button } from "@/components/ui/button";
 
 const Relatorios = () => {
-  const { clientes } = useAppStore();
+  const { clientes } = useClientes();
   const [mesSelecionado, setMesSelecionado] = useState<string>("");
   const [anoSelecionado, setAnoSelecionado] = useState<string>(new Date().getFullYear().toString());
   const [tipoRelatorio, setTipoRelatorio] = useState<string>("resumo");
@@ -281,7 +282,7 @@ const Relatorios = () => {
                         return (
                           <TableRow key={cliente.id}>
                             <TableCell className="font-medium">{cliente.nome}</TableCell>
-                            <TableCell>{cliente.colaboradorResponsavel}</TableCell>
+                            <TableCell>{cliente.colaborador_responsavel}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className={
                                 status === 'completo' ? 'bg-green-100 text-green-800 border-green-200' :
