@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Users, FileSpreadsheet, Settings, Plus, TrendingUp, Calendar, BarChart3, FileText } from "lucide-react";
@@ -100,7 +101,7 @@ export function AppSidebar() {
       <Sidebar className="border-r border-gray-200/50 bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 dark:border-gray-800/50">
         <SidebarHeader className="p-6">
           <div className="flex items-center space-x-3">
-            <img src="/logo.png" alt="JLV Flash Pro Logo" className="w-8 h-8 rounded-lg" />
+            <img src="/lovable-uploads/36938331-d63d-4272-b6d6-6620ffab379e.png" alt="JLV Flash Pro Logo" className="w-8 h-8 rounded-lg" />
             {state !== "collapsed" && (
               <div>
                 <span className="font-bold text-lg tracking-tight">JLV Contábil Pro</span>
