@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -18,43 +19,39 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3 pointer-events-auto", className)}
+      className={cn("p-4 bg-white rounded-lg shadow-lg border-0", className)}
       locale={ptBR}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        caption_dropdowns: "flex justify-center gap-1",
-        nav: "space-x-1 flex items-center",
+        caption: "flex justify-center pt-2 pb-4 relative items-center",
+        caption_label: "text-lg font-semibold text-gray-800",
+        caption_dropdowns: "flex justify-center gap-3",
+        nav: "space-x-2 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-8 w-8 bg-white hover:bg-red-50 border-red-200 text-red-600 hover:text-red-700 shadow-sm"
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        nav_button_previous: "absolute left-2",
+        nav_button_next: "absolute right-2",
         table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        head_row: "flex mb-2",
+        head_cell: "text-red-600 rounded-md w-10 font-semibold text-sm uppercase tracking-wide",
+        row: "flex w-full mt-1",
+        cell: "h-10 w-10 text-center text-sm p-0 relative hover:bg-red-50 rounded-md transition-colors [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-red-50/50 [&:has([aria-selected])]:bg-red-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          "h-10 w-10 p-0 font-medium hover:bg-red-50 hover:text-red-700 aria-selected:opacity-100 rounded-md transition-all duration-200"
         ),
         day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_selected: "bg-red-600 text-white hover:bg-red-700 hover:text-white focus:bg-red-700 focus:text-white shadow-md",
+        day_today: "bg-red-100 text-red-700 font-bold border-2 border-red-300",
+        day_outside: "day-outside text-gray-400 opacity-60 aria-selected:bg-red-100/50 aria-selected:text-gray-500 aria-selected:opacity-40",
+        day_disabled: "text-gray-300 opacity-40 cursor-not-allowed",
+        day_range_middle: "aria-selected:bg-red-100 aria-selected:text-red-700",
         day_hidden: "invisible",
-        dropdown_month: "relative inline-flex h-9 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-        dropdown_year: "relative inline-flex h-9 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+        dropdown_month: "relative inline-flex h-10 items-center justify-between rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 min-w-[120px]",
+        dropdown_year: "relative inline-flex h-10 items-center justify-between rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 min-w-[100px]",
         ...classNames,
       }}
       components={{
@@ -78,14 +75,15 @@ function Calendar({
                 handleChange(value);
               }}
             >
-              <SelectTrigger className="pr-1.5 focus:ring-0">
+              <SelectTrigger className="h-10 border-red-200 bg-white hover:bg-red-50 focus:ring-red-500 focus:border-red-500 shadow-sm font-medium text-gray-700">
                 <SelectValue>{selected?.props?.children ?? value}</SelectValue>
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent position="popper" className="bg-white border-red-200 shadow-lg">
                 {options.map((option, id: number) => (
                   <SelectItem
                     key={`${option.props.value}-${id}`}
                     value={option.props.value?.toString() ?? ""}
+                    className="hover:bg-red-50 focus:bg-red-50 text-gray-700"
                   >
                     {option.props.children}
                   </SelectItem>
