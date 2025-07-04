@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Save, Calendar, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, Save, Calendar as CalendarIcon, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus } from "lucide-react";
 import { Cliente } from "@/hooks/useClientes";
 import { useStatusMensal } from "@/hooks/useStatusMensal";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface ClientDetailsProps {
   cliente: Cliente;
@@ -40,8 +46,6 @@ const ClientDetails = ({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       if (inputFileRef.current) {
         inputFileRef.current.files = e.dataTransfer.files;
-        // Se já houver um handler de upload, chame aqui
-        // handleFileChange(e)
       }
     }
   };
@@ -62,6 +66,11 @@ const ClientDetails = ({
 
   const atualizarStatusMensal = async (mes: string, campo: string, valor: any) => {
     await updateStatusMensal(mes, { [campo]: valor });
+  };
+
+  const atualizarDataFechamento = async (mes: string, date: Date | undefined) => {
+    const dateString = date ? format(date, 'yyyy-MM-dd') : null;
+    await updateStatusMensal(mes, { data_fechamento: dateString });
   };
 
   const getStatusMes = (mes: string) => {
@@ -88,7 +97,7 @@ const ClientDetails = ({
     } else if (camposCompletos > 0) {
       return {
         cor: 'text-yellow-600',
-        icone: Calendar,
+        icone: CalendarIcon,
         status: 'Parcial'
       };
     } else {
@@ -149,7 +158,7 @@ const ClientDetails = ({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-2xl font-light">
-                  <Calendar className="h-5 w-5 mr-2 text-red-600" />
+                  <CalendarIcon className="h-5 w-5 mr-2 text-red-600" />
                   Controle Mensal - {new Date().getFullYear()}
                 </CardTitle>
                 <CardDescription>
@@ -195,15 +204,36 @@ const ClientDetails = ({
                             </Select>
                           </div>
 
-                          {/* Data de Fechamento */}
+                          {/* Data de Fechamento com DatePicker */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">Data de Fechamento</Label>
-                            <Input 
-                              type="date" 
-                              value={status?.data_fechamento || ''} 
-                              onChange={e => atualizarStatusMensal(mes, 'data_fechamento', e.target.value)} 
-                              className="h-8 text-xs" 
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full h-8 justify-start text-left font-normal text-xs",
+                                    !status?.data_fechamento && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-3 w-3" />
+                                  {status?.data_fechamento ? (
+                                    format(new Date(status.data_fechamento), "dd/MM/yyyy", { locale: ptBR })
+                                  ) : (
+                                    <span>Selecionar data</span>
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={status?.data_fechamento ? new Date(status.data_fechamento) : undefined}
+                                  onSelect={(date) => atualizarDataFechamento(mes, date)}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </div>
 
                           {/* Integrações */}
