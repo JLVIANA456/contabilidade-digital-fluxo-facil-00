@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Save, Calendar as CalendarIcon, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus } from "lucide-react";
+import { DateInput } from "@/components/ui/date-input";
+import { ArrowLeft, Save, Calendar as CalendarIcon, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus, Trash2, Download, Loader2 } from "lucide-react";
 import { Cliente } from "@/hooks/useClientes";
 import { useStatusMensal } from "@/hooks/useStatusMensal";
+import { useArquivos } from "@/hooks/useArquivos";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface ClientDetailsProps {
@@ -34,7 +31,12 @@ const ClientDetails = ({
   const [dadosEdicao, setDadosEdicao] = useState<Cliente>(cliente);
   const [mesArquivosAberto, setMesArquivosAberto] = useState<string | null>(null);
   const [mesAnotacoesAberto, setMesAnotacoesAberto] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const { statusMensal, updateStatusMensal } = useStatusMensal(cliente.id);
+  
+  // Hook de arquivos para o mês atual selecionado
+  const currentStatusMensalId = mesArquivosAberto ? statusMensal[mesArquivosAberto]?.id : null;
+  const { arquivos, uploading, uploadArquivo, deleteArquivo } = useArquivos(currentStatusMensalId);
   
   const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const formasEnvio = ['Gestta', 'Google Drive', 'Omie', 'Consulta eCAC', 'Físico', 'Email'];
@@ -43,16 +45,74 @@ const ClientDetails = ({
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      if (inputFileRef.current) {
-        inputFileRef.current.files = e.dataTransfer.files;
-      }
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(files);
     }
   };
 
   const handleClickDropzone = () => {
     if (inputFileRef.current) {
       inputFileRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    setSelectedFiles(files);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFiles || selectedFiles.length === 0 || !mesArquivosAberto) {
+      toast({
+        title: "Nenhum arquivo selecionado",
+        description: "Selecione pelo menos um arquivo para fazer upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Garantir que existe um status mensal para este mês
+    let statusMensalId = statusMensal[mesArquivosAberto]?.id;
+    
+    if (!statusMensalId) {
+      await updateStatusMensal(mesArquivosAberto, {});
+      statusMensalId = statusMensal[mesArquivosAberto]?.id;
+    }
+
+    if (!statusMensalId) {
+      toast({
+        title: "Erro ao criar status mensal",
+        description: "Não foi possível criar o registro para este mês",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Upload de cada arquivo
+    const uploadPromises = Array.from(selectedFiles).map(file => 
+      uploadArquivo(file, statusMensalId)
+    );
+
+    const results = await Promise.all(uploadPromises);
+    const successCount = results.filter(result => result !== null).length;
+
+    if (successCount > 0) {
+      toast({
+        title: `${successCount} arquivo(s) enviado(s) com sucesso!`,
+      });
+      
+      // Limpar seleção
+      setSelectedFiles(null);
+      if (inputFileRef.current) {
+        inputFileRef.current.value = '';
+      }
+    }
+  };
+
+  const downloadArquivo = (arquivo: any) => {
+    if (arquivo.url_arquivo) {
+      window.open(arquivo.url_arquivo, '_blank');
     }
   };
 
@@ -68,9 +128,8 @@ const ClientDetails = ({
     await updateStatusMensal(mes, { [campo]: valor });
   };
 
-  const atualizarDataFechamento = async (mes: string, date: Date | undefined) => {
-    const dateString = date ? format(date, 'yyyy-MM-dd') : null;
-    await updateStatusMensal(mes, { data_fechamento: dateString });
+  const atualizarDataFechamento = async (mes: string, date: string | undefined) => {
+    await updateStatusMensal(mes, { data_fechamento: date });
   };
 
   const getStatusMes = (mes: string) => {
@@ -109,14 +168,39 @@ const ClientDetails = ({
     }
   };
 
+  const getArquivosCount = (mes: string) => {
+    const statusId = statusMensal[mes]?.id;
+    if (!statusId) return 0;
+    
+    // Se é o mês atual aberto, usar a lista atualizada
+    if (mes === mesArquivosAberto) {
+      return arquivos.length;
+    }
+    
+    // Para outros meses, usar contagem básica (pode ser melhorado)
+    return 0;
+  };
+
   const abrirModalArquivos = (mes: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setMesArquivosAberto(mes);
+    setSelectedFiles(null);
+    if (inputFileRef.current) {
+      inputFileRef.current.value = '';
+    }
   };
 
   const abrirModalAnotacoes = (mes: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setMesAnotacoesAberto(mes);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -171,6 +255,7 @@ const ClientDetails = ({
                     const statusInfo = getStatusMes(mes);
                     const StatusIcon = statusInfo.icone;
                     const status = statusMensal[mes];
+                    const arquivosCount = getArquivosCount(mes);
                     
                     return (
                       <Card key={mes} className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
@@ -204,36 +289,14 @@ const ClientDetails = ({
                             </Select>
                           </div>
 
-                          {/* Data de Fechamento com DatePicker */}
+                          {/* Data de Fechamento com DateInput */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">Data de Fechamento</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full h-8 justify-start text-left font-normal text-xs",
-                                    !status?.data_fechamento && "text-muted-foreground"
-                                  )}
-                                >
-                                  <CalendarIcon className="mr-2 h-3 w-3" />
-                                  {status?.data_fechamento ? (
-                                    format(new Date(status.data_fechamento), "dd/MM/yyyy", { locale: ptBR })
-                                  ) : (
-                                    <span>Selecionar data</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={status?.data_fechamento ? new Date(status.data_fechamento) : undefined}
-                                  onSelect={(date) => atualizarDataFechamento(mes, date)}
-                                  initialFocus
-                                  className="pointer-events-auto"
-                                />
-                              </PopoverContent>
-                            </Popover>
+                            <DateInput
+                              value={status?.data_fechamento || undefined}
+                              onChange={(date) => atualizarDataFechamento(mes, date)}
+                              className="h-8"
+                            />
                           </div>
 
                           {/* Integrações */}
@@ -274,7 +337,7 @@ const ClientDetails = ({
                           <div className="flex items-center justify-between pt-2 border-t">
                             <div className="flex items-center space-x-2 text-xs text-gray-500">
                               <Paperclip className="h-3 w-3" />
-                              <span>0 arquivo(s)</span>
+                              <span>{arquivosCount} arquivo(s)</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <Button 
@@ -314,6 +377,7 @@ const ClientDetails = ({
           </TabsContent>
 
           <TabsContent value="dados" className="space-y-6">
+            {/* Dados do Cliente */}
             <Card>
               <CardHeader>
                 <CardTitle>Informações Cadastrais</CardTitle>
@@ -429,14 +493,14 @@ const ClientDetails = ({
 
       {/* Dialog para upload de arquivos */}
       <Dialog open={!!mesArquivosAberto} onOpenChange={() => setMesArquivosAberto(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="capitalize flex items-center">
               <Upload className="h-5 w-5 mr-2 text-blue-600" />
-              Upload de Arquivos - {mesArquivosAberto}
+              Gerenciar Arquivos - {mesArquivosAberto}
             </DialogTitle>
             <DialogDescription>
-              Faça upload dos arquivos relacionados a este mês
+              Faça upload e gerencie os arquivos relacionados a este mês
             </DialogDescription>
           </DialogHeader>
 
@@ -444,11 +508,10 @@ const ClientDetails = ({
             <div className="space-y-6">
               {/* Área de Upload */}
               <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-400 transition-colors cursor-pointer"
                 onClick={handleClickDropzone}
                 onDrop={handleDrop}
                 onDragOver={e => e.preventDefault()}
-                style={{ cursor: "pointer" }}
               >
                 <div className="text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -463,7 +526,8 @@ const ClientDetails = ({
                       type="file"
                       className="sr-only"
                       multiple
-                      // onChange={handleFileChange} // Use seu handler de upload aqui
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileChange}
                     />
                     <p className="mt-2 text-xs text-gray-500">
                       PNG, JPG, PDF até 10MB cada
@@ -472,11 +536,68 @@ const ClientDetails = ({
                 </div>
               </div>
 
-              {/* Lista de arquivos (placeholder) */}
+              {/* Arquivos selecionados para upload */}
+              {selectedFiles && selectedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">Arquivos Selecionados</Label>
+                  <div className="border rounded-lg p-4 space-y-2">
+                    {Array.from(selectedFiles).map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Lista de arquivos enviados */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">Arquivos Enviados</Label>
-                <div className="border rounded-lg p-4 text-center text-gray-500">
-                  Nenhum arquivo enviado ainda
+                <div className="border rounded-lg p-4">
+                  {arquivos.length === 0 ? (
+                    <div className="text-center text-gray-500 py-4">
+                      Nenhum arquivo enviado ainda
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {arquivos.map((arquivo) => (
+                        <div key={arquivo.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-4 w-4 text-gray-500" />
+                            <div>
+                              <span className="text-sm font-medium">{arquivo.nome_arquivo}</span>
+                              <div className="text-xs text-gray-500">
+                                {arquivo.tamanho_arquivo && formatFileSize(arquivo.tamanho_arquivo)} • 
+                                {new Date(arquivo.created_at).toLocaleDateString('pt-BR')}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadArquivo(arquivo)}
+                              className="h-8 px-2"
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteArquivo(arquivo)}
+                              className="h-8 px-2"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -485,12 +606,27 @@ const ClientDetails = ({
                   variant="outline" 
                   onClick={() => setMesArquivosAberto(null)}
                 >
-                  Cancelar
+                  Fechar
                 </Button>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Fazer Upload
-                </Button>
+                {selectedFiles && selectedFiles.length > 0 && (
+                  <Button 
+                    onClick={handleUpload}
+                    disabled={uploading}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Fazer Upload
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           )}
