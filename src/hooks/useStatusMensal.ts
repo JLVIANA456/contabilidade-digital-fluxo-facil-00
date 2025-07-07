@@ -52,12 +52,13 @@ export const useStatusMensal = (clienteId: string) => {
       const existingStatus = statusMensal[mes];
       
       if (existingStatus) {
+        // Atualizar registro existente usando maybeSingle() ao invés de single()
         const { data, error } = await supabase
           .from('status_mensal')
           .update(updates)
           .eq('id', existingStatus.id)
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Erro ao atualizar status mensal:', error);
@@ -69,11 +70,14 @@ export const useStatusMensal = (clienteId: string) => {
           return;
         }
 
-        setStatusMensal(prev => ({
-          ...prev,
-          [mes]: data
-        }));
+        if (data) {
+          setStatusMensal(prev => ({
+            ...prev,
+            [mes]: data
+          }));
+        }
       } else {
+        // Criar novo registro usando maybeSingle() ao invés de single()
         const { data, error } = await supabase
           .from('status_mensal')
           .insert([{
@@ -83,7 +87,7 @@ export const useStatusMensal = (clienteId: string) => {
             ...updates
           }])
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Erro ao criar status mensal:', error);
@@ -95,10 +99,12 @@ export const useStatusMensal = (clienteId: string) => {
           return;
         }
 
-        setStatusMensal(prev => ({
-          ...prev,
-          [mes]: data
-        }));
+        if (data) {
+          setStatusMensal(prev => ({
+            ...prev,
+            [mes]: data
+          }));
+        }
       }
     } catch (error) {
       console.error('Erro inesperado:', error);

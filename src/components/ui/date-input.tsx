@@ -13,14 +13,18 @@ interface DateInputProps {
 export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
   ({ value, onChange, placeholder = "DD/MM/AAAA", className, ...props }, ref) => {
     const [displayValue, setDisplayValue] = React.useState("");
+    const [isValid, setIsValid] = React.useState(true);
+    const timeoutRef = React.useRef<NodeJS.Timeout>();
 
     React.useEffect(() => {
       if (value) {
         // Converter de YYYY-MM-DD para DD/MM/YYYY
         const [year, month, day] = value.split('-');
         setDisplayValue(`${day}/${month}/${year}`);
+        setIsValid(true);
       } else {
         setDisplayValue("");
+        setIsValid(true);
       }
     }, [value]);
 
@@ -38,30 +42,67 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       }
     };
 
+    const validateDate = (formatted: string) => {
+      if (formatted.length !== 10) return false;
+      
+      const [day, month, year] = formatted.split('/');
+      const dayNum = parseInt(day);
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+      
+      // Validação básica de ranges
+      if (dayNum < 1 || dayNum > 31 || 
+          monthNum < 1 || monthNum > 12 || 
+          yearNum < 1900 || yearNum > 2100) {
+        return false;
+      }
+
+      // Validação mais específica de dias por mês
+      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      
+      // Verificar ano bissexto
+      if (monthNum === 2 && ((yearNum % 4 === 0 && yearNum % 100 !== 0) || yearNum % 400 === 0)) {
+        daysInMonth[1] = 29;
+      }
+      
+      return dayNum <= daysInMonth[monthNum - 1];
+    };
+
+    const debouncedOnChange = React.useCallback((date: string | undefined) => {
+      // Limpar timeout anterior
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Definir novo timeout de 500ms
+      timeoutRef.current = setTimeout(() => {
+        onChange(date);
+      }, 500);
+    }, [onChange]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const input = e.target.value;
       const formatted = formatDateInput(input);
       setDisplayValue(formatted);
 
-      // Se tem 10 caracteres (DD/MM/AAAA), tenta converter para YYYY-MM-DD
+      // Se tem 10 caracteres (DD/MM/AAAA), valida e converte
       if (formatted.length === 10) {
-        const [day, month, year] = formatted.split('/');
+        const isDateValid = validateDate(formatted);
+        setIsValid(isDateValid);
         
-        // Validação básica
-        const dayNum = parseInt(day);
-        const monthNum = parseInt(month);
-        const yearNum = parseInt(year);
-        
-        if (dayNum >= 1 && dayNum <= 31 && 
-            monthNum >= 1 && monthNum <= 12 && 
-            yearNum >= 1900 && yearNum <= 2100) {
+        if (isDateValid) {
+          const [day, month, year] = formatted.split('/');
           const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-          onChange(isoDate);
+          debouncedOnChange(isoDate);
         } else {
-          onChange(undefined);
+          debouncedOnChange(undefined);
         }
       } else {
-        onChange(undefined);
+        setIsValid(true); // Não mostrar erro enquanto está digitando
+        // Só limpar se estava com valor antes
+        if (value) {
+          debouncedOnChange(undefined);
+        }
       }
     };
 
@@ -73,6 +114,15 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       }
     };
 
+    // Limpar timeout ao desmontar componente
+    React.useEffect(() => {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, []);
+
     return (
       <Input
         ref={ref}
@@ -82,7 +132,11 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         maxLength={10}
-        className={cn("text-xs", className)}
+        className={cn(
+          "text-xs",
+          !isValid && "border-red-500 focus:border-red-500 focus:ring-red-200",
+          className
+        )}
         {...props}
       />
     );

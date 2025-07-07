@@ -129,7 +129,12 @@ const ClientDetails = ({
   };
 
   const atualizarDataFechamento = async (mes: string, date: string | undefined) => {
-    await updateStatusMensal(mes, { data_fechamento: date });
+    // Só atualizar se a data realmente mudou
+    const currentDate = statusMensal[mes]?.data_fechamento;
+    if (currentDate !== date) {
+      console.log(`Atualizando data de fechamento para ${mes}:`, date);
+      await updateStatusMensal(mes, { data_fechamento: date });
+    }
   };
 
   const getStatusMes = (mes: string) => {
@@ -289,7 +294,7 @@ const ClientDetails = ({
                             </Select>
                           </div>
 
-                          {/* Data de Fechamento com DateInput */}
+                          {/* Data de Fechamento com DateInput melhorado */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">Data de Fechamento</Label>
                             <DateInput
