@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -56,12 +55,22 @@ export const useArquivos = (statusMensalId: string | null) => {
     try {
       setUploading(true);
 
-      // Validar tipo de arquivo
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+      // Validar tipo de arquivo - INCLUINDO ARQUIVOS EXCEL
+      const allowedTypes = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/png', 
+        'image/jpg',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel', // .xls
+        'application/vnd.ms-excel.sheet.macroEnabled.12', // .xlsm
+        'text/csv' // .csv
+      ];
+      
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Tipo de arquivo não permitido",
-          description: "Apenas PDF, JPG e PNG são aceitos",
+          description: "Apenas PDF, JPG, PNG, XLSX, XLS, XLSM e CSV são aceitos",
           variant: "destructive",
         });
         return null;

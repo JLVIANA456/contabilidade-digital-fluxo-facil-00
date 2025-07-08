@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -542,7 +541,7 @@ const ClientDetails = ({
         </Tabs>
       </div>
 
-      {/* Dialog para upload de arquivos - MELHORADO */}
+      {/* Dialog para upload de arquivos - ATUALIZADO COM TIPOS EXCEL */}
       <Dialog open={!!mesArquivosAberto} onOpenChange={() => setMesArquivosAberto(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -551,7 +550,7 @@ const ClientDetails = ({
               Gerenciar Arquivos - {mesArquivosAberto}
             </DialogTitle>
             <DialogDescription>
-              Faça upload (PDF, JPG, PNG, XLSX) e baixe arquivos relacionados a este mês
+              Faça upload (PDF, JPG, PNG, XLSX, XLS, XLSM, CSV) e baixe arquivos relacionados a este mês
             </DialogDescription>
           </DialogHeader>
 
@@ -577,11 +576,11 @@ const ClientDetails = ({
                       type="file"
                       className="sr-only"
                       multiple
-                      accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                      accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.xlsm,.csv"
                       onChange={handleFileChange}
                     />
                     <p className="mt-2 text-xs text-gray-500">
-                      PDF, JPG, PNG, XLSX até 10MB cada
+                      PDF, JPG, PNG, XLSX, XLS, XLSM, CSV até 10MB cada
                     </p>
                   </div>
                 </div>
