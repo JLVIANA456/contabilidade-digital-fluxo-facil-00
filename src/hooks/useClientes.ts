@@ -27,6 +27,7 @@ export interface StatusMensal {
   sem_movimento_fopag: boolean;
   sm: boolean;
   forma_envio: string | null;
+  responsavel_fechamento: string | null;
   anotacoes: string | null;
   created_at: string;
   updated_at: string;
