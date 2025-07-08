@@ -103,6 +103,7 @@ export type Database = {
           integracao_fiscal: boolean
           integracao_fopag: boolean
           mes: string
+          responsavel_fechamento: string | null
           sem_movimento_fopag: boolean
           sm: boolean
           updated_at: string
@@ -118,6 +119,7 @@ export type Database = {
           integracao_fiscal?: boolean
           integracao_fopag?: boolean
           mes: string
+          responsavel_fechamento?: string | null
           sem_movimento_fopag?: boolean
           sm?: boolean
           updated_at?: string
@@ -133,6 +135,7 @@ export type Database = {
           integracao_fiscal?: boolean
           integracao_fopag?: boolean
           mes?: string
+          responsavel_fechamento?: string | null
           sem_movimento_fopag?: boolean
           sm?: boolean
           updated_at?: string

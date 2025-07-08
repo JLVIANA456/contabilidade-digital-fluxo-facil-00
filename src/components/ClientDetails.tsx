@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DateInput } from "@/components/ui/date-input";
-import { ArrowLeft, Save, Calendar as CalendarIcon, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus, Trash2, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Calendar as CalendarIcon, FileText, CheckCircle, Upload, Paperclip, MessageSquare, Plus, Trash2, Download, Loader2, User } from "lucide-react";
 import { Cliente } from "@/hooks/useClientes";
 import { useStatusMensal } from "@/hooks/useStatusMensal";
 import { useArquivos } from "@/hooks/useArquivos";
@@ -40,6 +41,7 @@ const ClientDetails = ({
   
   const mesesDoAno = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const formasEnvio = ['Gestta', 'Google Drive', 'Omie', 'Consulta eCAC', 'Físico', 'Email'];
+  const colaboradores = ['Sheila', 'Bruna', 'Nilcea', 'Natiele'];
 
   const inputFileRef = useRef<HTMLInputElement>(null);
 
@@ -112,7 +114,25 @@ const ClientDetails = ({
 
   const downloadArquivo = (arquivo: any) => {
     if (arquivo.url_arquivo) {
-      window.open(arquivo.url_arquivo, '_blank');
+      // Criar link temporário para download
+      const link = document.createElement('a');
+      link.href = arquivo.url_arquivo;
+      link.download = arquivo.nome_arquivo;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download iniciado",
+        description: `Baixando ${arquivo.nome_arquivo}`,
+      });
+    } else {
+      toast({
+        title: "Erro no download",
+        description: "URL do arquivo não encontrada",
+        variant: "destructive",
+      });
     }
   };
 
@@ -208,6 +228,11 @@ const ClientDetails = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    return <FileText className="h-4 w-4 text-gray-500" />;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -276,6 +301,27 @@ const ClientDetails = ({
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                          {/* Responsável pelo Fechamento */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium flex items-center">
+                              <User className="h-3 w-3 mr-1" />
+                              Responsável Fechamento
+                            </Label>
+                            <Select 
+                              value={status?.responsavel_fechamento || ''} 
+                              onValueChange={value => atualizarStatusMensal(mes, 'responsavel_fechamento', value)}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Selecionar..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {colaboradores.map(colaborador => (
+                                  <SelectItem key={colaborador} value={colaborador}>{colaborador}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
                           {/* Forma de Envio */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">Forma de Envio</Label>
@@ -496,7 +542,7 @@ const ClientDetails = ({
         </Tabs>
       </div>
 
-      {/* Dialog para upload de arquivos */}
+      {/* Dialog para upload de arquivos - MELHORADO */}
       <Dialog open={!!mesArquivosAberto} onOpenChange={() => setMesArquivosAberto(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -505,7 +551,7 @@ const ClientDetails = ({
               Gerenciar Arquivos - {mesArquivosAberto}
             </DialogTitle>
             <DialogDescription>
-              Faça upload e gerencie os arquivos relacionados a este mês
+              Faça upload (PDF, JPG, PNG, XLSX) e baixe arquivos relacionados a este mês
             </DialogDescription>
           </DialogHeader>
 
@@ -531,11 +577,11 @@ const ClientDetails = ({
                       type="file"
                       className="sr-only"
                       multiple
-                      accept=".pdf,.jpg,.jpeg,.png"
+                      accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
                       onChange={handleFileChange}
                     />
                     <p className="mt-2 text-xs text-gray-500">
-                      PNG, JPG, PDF até 10MB cada
+                      PDF, JPG, PNG, XLSX até 10MB cada
                     </p>
                   </div>
                 </div>
@@ -549,7 +595,7 @@ const ClientDetails = ({
                     {Array.from(selectedFiles).map((file, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <div className="flex items-center space-x-2">
-                          <FileText className="h-4 w-4 text-gray-500" />
+                          {getFileIcon(file.name)}
                           <span className="text-sm">{file.name}</span>
                           <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
                         </div>
@@ -559,7 +605,7 @@ const ClientDetails = ({
                 </div>
               )}
 
-              {/* Lista de arquivos enviados */}
+              {/* Lista de arquivos enviados - MELHORADA */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">Arquivos Enviados</Label>
                 <div className="border rounded-lg p-4">
@@ -568,16 +614,25 @@ const ClientDetails = ({
                       Nenhum arquivo enviado ainda
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {arquivos.map((arquivo) => (
-                        <div key={arquivo.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div key={arquivo.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                           <div className="flex items-center space-x-3">
-                            <FileText className="h-4 w-4 text-gray-500" />
-                            <div>
-                              <span className="text-sm font-medium">{arquivo.nome_arquivo}</span>
-                              <div className="text-xs text-gray-500">
-                                {arquivo.tamanho_arquivo && formatFileSize(arquivo.tamanho_arquivo)} • 
-                                {new Date(arquivo.created_at).toLocaleDateString('pt-BR')}
+                            {getFileIcon(arquivo.nome_arquivo)}
+                            <div className="flex-1">
+                              <span className="text-sm font-medium text-gray-900">{arquivo.nome_arquivo}</span>
+                              <div className="text-xs text-gray-500 flex items-center space-x-2">
+                                {arquivo.tamanho_arquivo && (
+                                  <span>{formatFileSize(arquivo.tamanho_arquivo)}</span>
+                                )}
+                                <span>•</span>
+                                <span>{new Date(arquivo.created_at).toLocaleDateString('pt-BR')}</span>
+                                {arquivo.tipo_arquivo && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="uppercase">{arquivo.tipo_arquivo}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -586,9 +641,10 @@ const ClientDetails = ({
                               variant="outline"
                               size="sm"
                               onClick={() => downloadArquivo(arquivo)}
-                              className="h-8 px-2"
+                              className="h-8 px-3 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                             >
-                              <Download className="h-3 w-3" />
+                              <Download className="h-3 w-3 mr-1" />
+                              Baixar
                             </Button>
                             <Button
                               variant="destructive"
