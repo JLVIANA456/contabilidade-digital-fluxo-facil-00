@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -87,37 +88,62 @@ export const useArquivos = (statusMensalId: string | null) => {
         return null;
       }
 
-      // Gerar nome único para o arquivo
+      // Sanitizar nome do arquivo para evitar caracteres problemáticos
+      const sanitizedFileName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, '_') // Remove caracteres especiais
+        .replace(/\s+/g, '_') // Remove espaços
+        .replace(/_+/g, '_') // Remove underscores duplos
+        .toLowerCase();
+
+      // Gerar nome único e caminho seguro
       const timestamp = new Date().getTime();
-      const fileName = `${timestamp}-${file.name}`;
-      const filePath = `${statusMensalId}/${fileName}`;
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const fileExtension = sanitizedFileName.split('.').pop();
+      const fileName = `${timestamp}_${randomId}.${fileExtension}`;
+      
+      // Usar caminho mais simples e seguro
+      const filePath = `arquivos/${fileName}`;
+
+      console.log('Fazendo upload do arquivo:', {
+        fileName,
+        filePath,
+        fileSize: file.size,
+        fileType: file.type
+      });
 
       // Upload para o storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('cliente-arquivos')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
         toast({
           title: "Erro no upload",
-          description: uploadError.message,
+          description: `Erro ao fazer upload: ${uploadError.message}`,
           variant: "destructive",
         });
         return null;
       }
+
+      console.log('Upload realizado com sucesso:', uploadData);
 
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('cliente-arquivos')
         .getPublicUrl(filePath);
 
+      console.log('URL pública gerada:', publicUrl);
+
       // Salvar metadados na tabela arquivos
       const { data: arquivoData, error: dbError } = await supabase
         .from('arquivos')
         .insert([{
           status_mensal_id: statusMensalId,
-          nome_arquivo: file.name,
+          nome_arquivo: file.name, // Manter nome original para exibição
           tipo_arquivo: file.type,
           tamanho_arquivo: file.size,
           url_arquivo: publicUrl
@@ -134,11 +160,13 @@ export const useArquivos = (statusMensalId: string | null) => {
         
         toast({
           title: "Erro ao salvar arquivo",
-          description: dbError.message,
+          description: `Erro na base de dados: ${dbError.message}`,
           variant: "destructive",
         });
         return null;
       }
+
+      console.log('Metadados salvos com sucesso:', arquivoData);
 
       // Atualizar lista local
       setArquivos(prev => [arquivoData, ...prev]);
@@ -150,10 +178,10 @@ export const useArquivos = (statusMensalId: string | null) => {
 
       return arquivoData;
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('Erro inesperado no upload:', error);
       toast({
         title: "Erro inesperado",
-        description: "Erro no upload do arquivo",
+        description: `Erro no upload do arquivo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
       return null;
@@ -164,12 +192,29 @@ export const useArquivos = (statusMensalId: string | null) => {
 
   const deleteArquivo = async (arquivo: Arquivo) => {
     try {
-      // Remover do storage
+      // Extrair caminho do arquivo da URL
+      let pathToDelete = '';
       if (arquivo.url_arquivo) {
-        const path = arquivo.url_arquivo.split('/').slice(-2).join('/');
-        await supabase.storage
+        const url = new URL(arquivo.url_arquivo);
+        const pathParts = url.pathname.split('/');
+        // Pegar a parte após 'cliente-arquivos'
+        const bucketIndex = pathParts.findIndex(part => part === 'cliente-arquivos');
+        if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
+          pathToDelete = pathParts.slice(bucketIndex + 1).join('/');
+        }
+      }
+
+      console.log('Deletando arquivo do storage:', pathToDelete);
+
+      // Remover do storage se temos o caminho
+      if (pathToDelete) {
+        const { error: storageError } = await supabase.storage
           .from('cliente-arquivos')
-          .remove([path]);
+          .remove([pathToDelete]);
+        
+        if (storageError) {
+          console.warn('Erro ao remover do storage:', storageError);
+        }
       }
 
       // Remover da tabela
@@ -195,10 +240,10 @@ export const useArquivos = (statusMensalId: string | null) => {
         title: "Arquivo excluído com sucesso!",
       });
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('Erro inesperado ao deletar:', error);
       toast({
         title: "Erro inesperado",
-        description: "Erro ao excluir arquivo",
+        description: `Erro ao excluir arquivo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
